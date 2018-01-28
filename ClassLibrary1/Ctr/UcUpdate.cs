@@ -15,6 +15,7 @@ namespace AUFM.Ctr
         public UcUpdate()
         {
             InitializeComponent();
+            
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -22,15 +23,7 @@ namespace AUFM.Ctr
             base.OnParentChanged(e);
             Dock = DockStyle.Fill;
         }
-
-        private void UcUpdate_Load(object sender, EventArgs e)
-        {
-
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
-        }
     }
+
+
 }
