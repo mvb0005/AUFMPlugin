@@ -38,7 +38,7 @@ namespace AUFMPlugin
                 ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0);
                 String partID = selectedItem.PropertyCategories.FindCategoryByDisplayName("Element ID").Properties.FindPropertyByDisplayName("Value").Value.ToDisplayString().ToString();
                 WebClient client = new WebClient();
-                String url = "http://aufm-backend.herokuapp.com/api/part/" + partID + "/protocol";
+                String url = "https://aufm-backend.herokuapp.com/api/part/" + partID + "/protocol";
                 JObject json = null;
                 try
                 {
