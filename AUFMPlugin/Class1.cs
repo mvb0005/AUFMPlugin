@@ -8,18 +8,57 @@ using System.Windows.Forms;
 
 namespace AUFMPlugin
 {
-    [Plugin("AUFMPlugin", "AUFM", DisplayName = "AUFM Safety Pane")]
+    
+    [Plugin(name: "AUFMPlugin", developerId: "AUFM", DisplayName = "AUFM Safety Pane")]
     [DockPanePlugin(200, 400, AutoScroll = true, MinimumHeight = 100, MinimumWidth = 200)]
-    public class AUFM : DockPanePlugin
+    [AddInPlugin(AddInLocation.AddIn)]
+    public class AUFMDockPane : DockPanePlugin
     {
+        ControlPane AUFMControlPane;
         public override Control CreateControlPane()
         {
-            return new ControlPane();
+            AUFMControlPane = new ControlPane();
+            return AUFMControlPane;
         }
 
-        public override void DestroyControlPane(System.Windows.Forms.Control pane)
+        public void updateBuilding(String buildingName)
+        {
+            AUFMControlPane.updateBuilding(buildingName);
+        }
+
+        public override void DestroyControlPane(Control pane)
         {
             base.DestroyControlPane(pane);
+        }
+        
+        public void toggleVisibilty()
+        {
+            Visible = !Visible;
+        }
+    }
+
+    [Plugin(name: "AUFMAddinPane", developerId: "AUFM", ToolTip = "AUFM Safety Pane",  DisplayName = "AUFM Safety Pane")]
+    [AddInPlugin(AddInLocation.AddIn)]
+    public class AUFMAddinPane : AddInPlugin
+    {
+        public override int Execute(params string[] parameters)
+        {
+            PluginRecord pluginRecord = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("AUFMPlugin.AUFM");
+            AUFMDockPane dockPanePlugin = (AUFMDockPane)pluginRecord.LoadedPlugin;
+            dockPanePlugin.toggleVisibilty();
+            return 0;
+        }
+    }
+
+    [Plugin(name: "AUFMBuildingManagementPane", developerId: "AUFM", ToolTip = "AUFM Building Management Pane", DisplayName = "AUFM Building Management Pane")]
+    [AddInPlugin(AddInLocation.AddIn)]
+    public class AUFMBuildingManagementPane : AddInPlugin
+    {
+        private AUFMForm form = new AUFMForm();
+        public override int Execute(params string[] parameters)
+        {
+            form.Visible = !form.Visible;
+            return 0;
         }
     }
 }

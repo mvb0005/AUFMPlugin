@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using Autodesk.Navisworks.Api;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using AUFMPlugin.Properties;
 
 namespace AUFMPlugin
 {
@@ -20,59 +21,62 @@ namespace AUFMPlugin
         public ControlPane()
         {
             Autodesk.Navisworks.Api.Application.ActiveDocument.CurrentSelection.Changed += new EventHandler<EventArgs>(Selection_Changed);
-            InitializeComponent();
-
+            InitializeComponent();            
+            
         }
 
-        private class Protocol
+        public void updateBuilding(String buildingName)
         {
-            public int protocol_id { get; set;}
-            public string value { get; set; }
+            linkLabel1.Text = buildingName;
         }
 
         private void Selection_Changed(object sender, EventArgs e)
         {
             Document doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
-            if (doc.CurrentSelection.SelectedItems.Count >= 1)
+            if (doc.CurrentSelection.SelectedItems.Count == 1 && IsValidPart(doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0).Parent))
             {
-                ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0);
-                String partID = selectedItem.PropertyCategories.FindCategoryByDisplayName("Element ID").Properties.FindPropertyByDisplayName("Value").Value.ToDisplayString().ToString();
-                WebClient client = new WebClient();
-                String url = "https://aufm-backend.herokuapp.com/api/part/" + partID + "/protocol";
+                ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0).Parent;
+                String partID = selectedItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString().ToString();
+                String url = "part/" + partID + "/protocol";
+                String response = Library.getHttpRequest(url);
+                response = response == "error" ? response : null;
                 JObject json = null;
                 try
                 {
-                    json = JObject.Parse(client.DownloadString(new Uri(url)));
-                    this.label1.Text = "Will be part name from database";
+                    json = JObject.Parse(response);
+                    this.label1.Text = partID;
                 }
-                catch (WebException ex)
+                catch (ArgumentNullException)
                 {
                     this.label1.Text = "Part Not Found";
                     this.dataGridView1.Visible = false;   
                 }
-                //json = JObject.Parse(client.DownloadString("https://pastebin.com/raw/rk8NEyFY")); //w0zSmW4R
                 if (json != null)
                 {
-                    IList<JToken> results = json["protocols"].Children().ToList();
+                    PartProtocol part = json.ToObject<PartProtocol>();
                     this.dataGridView1.Rows.Clear();
-                    foreach (JToken result in results)
+                    foreach (Protocol protocol in part.protocols)
                     {
-                        Protocol p = result.ToObject<Protocol>();
-                        this.dataGridView1.Rows.Add(p.protocol_id, p.value);
+                        this.dataGridView1.Rows.Add(protocol.protocol_id, protocol.value);
                     }
 
                     this.dataGridView1.Visible = true;
                 }
-
-                
-
-
             }
             else
             {
                 this.label1.Text = "Make A Selection";
                 this.dataGridView1.Visible = false;
             }
+        }
+
+        private bool IsValidPart(ModelItem part)
+        {
+            if (part.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value") == null)
+            {
+                return false;
+            }
+            return true;
         }
 
         protected override void OnParentChanged(EventArgs e)

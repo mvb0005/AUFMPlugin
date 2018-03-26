@@ -1,4 +1,6 @@
-﻿namespace AUFMPlugin
+﻿using AUFMPlugin.Properties;
+
+namespace AUFMPlugin
 {
     partial class ControlPane
     {
@@ -45,7 +47,7 @@
             this.linkLabel1.Size = new System.Drawing.Size(194, 29);
             this.linkLabel1.TabIndex = 0;
             this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "AUFM Safety Pane";
+            this.linkLabel1.Text = Settings.Default["Building"].ToString();
             this.linkLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // dataGridView1
