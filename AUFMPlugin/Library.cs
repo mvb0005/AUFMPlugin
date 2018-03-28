@@ -31,7 +31,9 @@ namespace AUFMPlugin
         {
             try
             {
+                client.Headers.Add("Content-type", "application/json");
                 var response = client.UploadString(new Uri(url + location), json);
+                client.Headers.Clear();
                 return response;
             }
             catch (WebException e)
@@ -65,6 +67,11 @@ namespace AUFMPlugin
     {
         public int building_id { get; set; }
         public string name { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return ((Building) obj).name == this.name;
+        }
     }
 
     public class PartProtocol
@@ -78,5 +85,6 @@ namespace AUFMPlugin
     {
         public int building_id { get; set; }
         public int element_id { get; set; }
+        public String part_name { get; set; }
     }
 }

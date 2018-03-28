@@ -13,6 +13,7 @@ using Autodesk.Navisworks.Api;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using AUFMPlugin.Properties;
+using System.Diagnostics;
 
 namespace AUFMPlugin
 {
@@ -21,13 +22,20 @@ namespace AUFMPlugin
         public ControlPane()
         {
             Autodesk.Navisworks.Api.Application.ActiveDocument.CurrentSelection.Changed += new EventHandler<EventArgs>(Selection_Changed);
-            InitializeComponent();            
-            
+            InitializeComponent();
+            linkLabel1.LinkClicked += new LinkLabelLinkClickedEventHandler(linkClicked);
+            updateBuilding(Settings.Default.Building);
+        }
+
+        private void linkClicked(object sender, EventArgs e)
+        {
+            Process.Start("http://aufm-backend.herokuapp.com/");
         }
 
         public void updateBuilding(String buildingName)
         {
             linkLabel1.Text = buildingName;
+            
         }
 
         private void Selection_Changed(object sender, EventArgs e)
@@ -39,7 +47,7 @@ namespace AUFMPlugin
                 String partID = selectedItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString().ToString();
                 String url = "part/" + partID + "/protocol";
                 String response = Library.getHttpRequest(url);
-                response = response == "error" ? response : null;
+                response = response == "error" ? null: response ;
                 JObject json = null;
                 try
                 {
@@ -48,7 +56,7 @@ namespace AUFMPlugin
                 }
                 catch (ArgumentNullException)
                 {
-                    this.label1.Text = "Part Not Found";
+                    this.label1.Text = "Not In Database";
                     this.dataGridView1.Visible = false;   
                 }
                 if (json != null)
@@ -59,8 +67,14 @@ namespace AUFMPlugin
                     {
                         this.dataGridView1.Rows.Add(protocol.protocol_id, protocol.value);
                     }
-
-                    this.dataGridView1.Visible = true;
+                    if (this.dataGridView1.Rows.Count > 0)
+                    { 
+                        this.dataGridView1.Visible = true;
+                    } else
+                    {
+                        this.label1.Text = "No Protocols Attached";
+                        this.dataGridView1.Visible = false;
+                    }
                 }
             }
             else

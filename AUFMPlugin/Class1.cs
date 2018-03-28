@@ -45,7 +45,14 @@ namespace AUFMPlugin
         {
             PluginRecord pluginRecord = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("AUFMPlugin.AUFM");
             AUFMDockPane dockPanePlugin = (AUFMDockPane)pluginRecord.LoadedPlugin;
-            dockPanePlugin.toggleVisibilty();
+            if (dockPanePlugin != null)
+            {
+                dockPanePlugin.toggleVisibilty();
+            } else
+            {
+                dockPanePlugin = new AUFMDockPane();
+            }
+     
             return 0;
         }
     }
@@ -57,7 +64,15 @@ namespace AUFMPlugin
         private AUFMForm form = new AUFMForm();
         public override int Execute(params string[] parameters)
         {
-            form.Visible = !form.Visible;
+            if (!form.IsDisposed)
+            {
+                form.Visible = !form.Visible;
+            }
+            else
+            {
+                form = new AUFMForm();
+                form.Visible = true;
+            }
             return 0;
         }
     }

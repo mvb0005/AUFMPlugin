@@ -19,27 +19,83 @@ namespace AUFMPlugin
     public partial class AUFMForm : Form
     {
         private AUFMDockPane dockPanePlugin;
+        private Building[] buildings;
+        private ModelItemCollection parts;
         public AUFMForm()
         {
+            InitializeComponent();
             PluginRecord pluginRecord = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("AUFMPlugin.AUFM");
             dockPanePlugin = (AUFMDockPane)pluginRecord.LoadedPlugin;
-            InitializeComponent();
+            buildings = getBuildings();
             comboBox1.Text = Settings.Default["Building"].ToString();
+            label2.Text = comboBox1.Text;
             button1.Click += new EventHandler(this.SelectBuilding);
+            button2.Click += new EventHandler(this.uploadParts);
+            comboBox1.TextChanged += new EventHandler(this.BuildingChanged);
+            Autodesk.Navisworks.Api.Application.ActiveDocument.Models.CollectionChanged += fileChanged;
             populateComboBox();
+            updateButton();
+            getParts();
+
+        }
+
+        private void BuildingChanged(object sender, EventArgs e)
+        {
+            updateButton();
+        }
+
+        void uploadParts(object sender, EventArgs e)
+        {
+            if (!isBuildinginAPI(comboBox1.Text))
+            {
+                AddBuildingToApi(comboBox1.Text);
+                updateButton();
+            }
+            AddPartsToBuildinginApi();
+        }
+
+        private void fileChanged(object sender, EventArgs e)
+        {
+            getParts();
+        }
+
+        void updateButton()
+        {
+            if (isBuildinginAPI(comboBox1.Text))
+            {
+                button1.Text = "Select Building";
+            }
+            else
+            {
+                button1.Text = "Add Building To API";
+            }
+        }
+        
+        bool isBuildinginAPI(String buildingName)
+        {
+            Building building = new Building();
+            building.name = buildingName;
+            return buildings.Contains(building);
         }
 
         void SelectBuilding(object sender, EventArgs e)
         {
-            Settings.Default["Building"] = comboBox1.Text;
-            Settings.Default.Save();
-            dockPanePlugin.updateBuilding(comboBox1.Text);
-            label1.Text = Library.getHttpRequest("building/" + comboBox1.Text);
-            if (comboBox1.Text.Length > 0 && Library.getHttpRequest("building/" + comboBox1.Text) == "error")
-            {
-                AddBuildingToApi(comboBox1.Text);
+            if (comboBox1.Text.Length > 0) {
+                Settings.Default["Building"] = comboBox1.Text;
+                Settings.Default.Save();
+                if (dockPanePlugin != null)
+                {
+                    dockPanePlugin.updateBuilding(comboBox1.Text);
+                }
+                label2.Text = comboBox1.Text;
+                if (!isBuildinginAPI(comboBox1.Text))
+                {
+                    AddBuildingToApi(comboBox1.Text);
+                }
+                buildings = getBuildings();
+                populateComboBox();
+                updateButton();
             }
-            populateComboBox();
         }
 
         void populateComboBox()
@@ -61,27 +117,52 @@ namespace AUFMPlugin
         {
             
             var result = Library.postHttpRequest("building", new JObject(new JProperty("name", buildingName)).ToString());
-            label1.Text = result;
             return result;
         }
 
         void AddPartsToBuildinginApi()
+        {
+            Building b = Array.Find(buildings, building => building.name == comboBox1.Text);
+            var total = "";
+            foreach (ModelItem modelItem in parts)
+            {
+                Part p = new Part
+                {
+                    building_id = b.building_id,
+                    element_id = Int32.Parse(modelItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString()),
+                    part_name = modelItem.DisplayName
+                };
+                var result = Library.getHttpRequest("part/" + p.element_id.ToString());
+                if (result == "error")
+                {
+                    Library.postHttpRequest("part", JsonConvert.SerializeObject(p));
+                    total += p.part_name + " Added\r\n";
+                }
+                textBox1.Text = total + "Done";
+            }
+            
+        }
+
+        void getParts()
         {
             Document doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
             Search s = new Search();
             s.Selection.SelectAll();
             s.SearchConditions.Add(SearchCondition.HasPropertyByDisplayName("Element ID", "Value"));
             s.SearchConditions.Add(SearchCondition.HasPropertyByDisplayName("Item", "GUID"));
-            ModelItemCollection modelItemCollection = s.FindAll(doc, false);
-            foreach (ModelItem modelItem in modelItemCollection)
-            {
-                Part p = new Part
-                {
-                    building_id = 1,
-                    element_id = Int32.Parse(modelItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString())
-                };
-                label1.Text += "\n" + JsonConvert.SerializeObject(p);
-            }
+            parts =  s.FindAll(doc, false);
+            button2.Text = "Upload " + parts.Count.ToString() + " Parts to Database";
         }
+
+        Building[] getBuildings()
+        {
+            var response = Library.getHttpRequest("building");
+            if (response != "error")
+            {
+                return JsonConvert.DeserializeObject<Building[]>(response);
+            }
+            return null;
+        }
+
     }
 }
