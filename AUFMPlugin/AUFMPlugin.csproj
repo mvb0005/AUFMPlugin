@@ -57,6 +57,12 @@
       <DependentUpon>AUFMForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Class1.cs" />
+    <Compile Include="AUFMLogin.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AUFMLogin.Designer.cs">
+      <DependentUpon>AUFMLogin.cs</DependentUpon>
+    </Compile>
     <Compile Include="Library.cs" />
     <Compile Include="ControlPane.cs">
       <SubType>UserControl</SubType>
@@ -76,12 +82,17 @@
     <EmbeddedResource Include="AUFMForm.resx">
       <DependentUpon>AUFMForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="AUFMLogin.resx">
+      <DependentUpon>AUFMLogin.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="ControlPane.resx">
       <DependentUpon>ControlPane.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

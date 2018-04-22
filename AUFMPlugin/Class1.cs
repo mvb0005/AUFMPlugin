@@ -76,4 +76,24 @@ namespace AUFMPlugin
             return 0;
         }
     }
+
+    [Plugin(name: "AUFMLoginPane", developerId: "AUFM", ToolTip = "AUFM Login Pane", DisplayName = "AUFM Login Pane")]
+    [AddInPlugin(AddInLocation.AddIn)]
+    public class AUFMLoginPane : AddInPlugin
+    {
+        private AUFMLogin form = new AUFMLogin();
+        public override int Execute(params string[] parameters)
+        {
+            if (!form.IsDisposed)
+            {
+                form.Visible = !form.Visible;
+            }
+            else
+            {
+                form = new AUFMLogin();
+                form.Visible = true;
+            }
+            return 0;
+        }
+    }
 }

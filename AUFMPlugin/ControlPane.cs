@@ -35,15 +35,14 @@ namespace AUFMPlugin
         public void updateBuilding(String buildingName)
         {
             linkLabel1.Text = buildingName;
-            
         }
 
         private void Selection_Changed(object sender, EventArgs e)
         {
             Document doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
-            if (doc.CurrentSelection.SelectedItems.Count == 1 && IsValidPart(doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0).Parent))
+            if (doc.CurrentSelection.SelectedItems.Count == 1 && IsValidPart(doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0)))
             {
-                ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0).Parent;
+                ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0);
                 String partID = selectedItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString().ToString();
                 String url = "part/" + partID + "/protocol";
                 String response = Library.getHttpRequest(url);
@@ -86,7 +85,7 @@ namespace AUFMPlugin
 
         private bool IsValidPart(ModelItem part)
         {
-            if (part.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value") == null)
+            if (part == null || part.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value") == null)
             {
                 return false;
             }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net;
+using AUFMPlugin.Properties;
 
 namespace AUFMPlugin
 {
@@ -17,7 +18,8 @@ namespace AUFMPlugin
         {
             try
             {
-                String responseString = client.DownloadString(new Uri(url + location));
+
+                String responseString = client.DownloadString(new Uri(Settings.Default.Url + location));
                 return responseString;
             }
             catch (WebException)
@@ -32,7 +34,7 @@ namespace AUFMPlugin
             try
             {
                 client.Headers.Add("Content-type", "application/json");
-                var response = client.UploadString(new Uri(url + location), json);
+                var response = client.UploadString(new Uri(Settings.Default.Url + location), json);
                 client.Headers.Clear();
                 return response;
             }
@@ -42,11 +44,16 @@ namespace AUFMPlugin
             }
         }
 
+        public static void login(string User, string Pass)
+        {
+            
+        }
+
         public static String putHttpRequest(string location, string data)
         {
             try
             {
-                var response = client.UploadString(url + location, "PUT", data);
+                var response = client.UploadString(Settings.Default.Url + location, "PUT", data);
                 return response;
             }
             catch (WebException e)

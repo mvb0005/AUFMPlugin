@@ -135,23 +135,32 @@ namespace AUFMPlugin
                 var result = Library.getHttpRequest("part/" + p.element_id.ToString());
                 if (result == "error")
                 {
+                    
                     Library.postHttpRequest("part", JsonConvert.SerializeObject(p));
                     total += p.part_name + " Added\r\n";
+                    textBox1.Text = total;
+                    textBox1.Update();
                 }
-                textBox1.Text = total + "Done";
             }
-            
+            textBox1.Text = total + "Done";
+
         }
 
         void getParts()
         {
             Document doc = Autodesk.Navisworks.Api.Application.ActiveDocument;
-            Search s = new Search();
-            s.Selection.SelectAll();
-            s.SearchConditions.Add(SearchCondition.HasPropertyByDisplayName("Element ID", "Value"));
-            s.SearchConditions.Add(SearchCondition.HasPropertyByDisplayName("Item", "GUID"));
-            parts =  s.FindAll(doc, false);
+            parts = new ModelItemCollection();
+            foreach (ModelItem item in doc.Models.RootItemDescendants)
+            {
+                textBox1.Update();
+                if (item.Children.Count() == 0 && item.Parent != null && !parts.Contains(item))
+                {
+                    textBox1.Text += item.Parent.DisplayName + "\r\n";
+                    parts.Add(item.Parent);
+                }
+            }
             button2.Text = "Upload " + parts.Count.ToString() + " Parts to Database";
+
         }
 
         Building[] getBuildings()
