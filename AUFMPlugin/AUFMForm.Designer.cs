@@ -114,6 +114,7 @@
             this.Controls.Add(this.comboBox1);
             this.Name = "AUFMForm";
             this.Text = "AUFM Building Manager";
+            this.TopMost = true;
             this.ResumeLayout(false);
             this.PerformLayout();
 

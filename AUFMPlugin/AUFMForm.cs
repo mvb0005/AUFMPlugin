@@ -100,10 +100,10 @@ namespace AUFMPlugin
 
         void populateComboBox()
         {
-            String url = "building";
+            String url = "/api/building";
             String response = Library.getHttpRequest(url);
             comboBox1.Items.Clear();
-            if (response != null)
+            if (response != null && response != "error")
             {
                 Building[] buildings = JsonConvert.DeserializeObject<Building[]>(response);
                 foreach (Building building in buildings)
@@ -116,7 +116,7 @@ namespace AUFMPlugin
         String AddBuildingToApi(String buildingName)
         {
             
-            var result = Library.postHttpRequest("building", new JObject(new JProperty("name", buildingName)).ToString());
+            var result = Library.postHttpRequest("/api/building", new JObject(new JProperty("name", buildingName)).ToString());
             return result;
         }
 
@@ -132,11 +132,11 @@ namespace AUFMPlugin
                     element_id = Int32.Parse(modelItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString()),
                     part_name = modelItem.DisplayName
                 };
-                var result = Library.getHttpRequest("part/" + p.element_id.ToString());
+                var result = Library.getHttpRequest("/api/part/" + p.element_id.ToString());
                 if (result == "error")
                 {
                     
-                    Library.postHttpRequest("part", JsonConvert.SerializeObject(p));
+                    Library.postHttpRequest("/api/part", JsonConvert.SerializeObject(p));
                     total += p.part_name + " Added\r\n";
                     textBox1.Text = total;
                     textBox1.Update();
@@ -155,7 +155,6 @@ namespace AUFMPlugin
                 textBox1.Update();
                 if (item.Children.Count() == 0 && item.Parent != null && !parts.Contains(item))
                 {
-                    textBox1.Text += item.Parent.DisplayName + "\r\n";
                     parts.Add(item.Parent);
                 }
             }
@@ -165,12 +164,12 @@ namespace AUFMPlugin
 
         Building[] getBuildings()
         {
-            var response = Library.getHttpRequest("building");
+            var response = Library.getHttpRequest("/api/building");
             if (response != "error")
             {
                 return JsonConvert.DeserializeObject<Building[]>(response);
             }
-            return null;
+            return new Building[1];
         }
 
     }

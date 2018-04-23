@@ -1,4 +1,5 @@
-﻿using Autodesk.Navisworks.Api.Plugins;
+﻿using AUFMPlugin.Properties;
+using Autodesk.Navisworks.Api.Plugins;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,10 +62,14 @@ namespace AUFMPlugin
     [AddInPlugin(AddInLocation.AddIn)]
     public class AUFMBuildingManagementPane : AddInPlugin
     {
-        private AUFMForm form = new AUFMForm();
+        private AUFMForm form;
         public override int Execute(params string[] parameters)
         {
-            if (!form.IsDisposed)
+            if (Settings.Default.Cookie == "") {
+                System.Windows.Forms.MessageBox.Show("Login Required");
+                return 0;
+            }
+            if (form != null && !form.IsDisposed)
             {
                 form.Visible = !form.Visible;
             }

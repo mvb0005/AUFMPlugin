@@ -6,24 +6,33 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net;
 using AUFMPlugin.Properties;
+using Newtonsoft.Json;
 
 namespace AUFMPlugin
 {
     class Library
     {
-        private static String url = "https://aufm-backend.herokuapp.com/api/";
-        private static readonly WebClient client = new WebClient();
+        
+        private static WebClient client = new WebClient();
+        private static String cookie = Settings.Default.Cookie;
+        public static bool LoggedIn = true;
 
         public static String getHttpRequest(String location)
         {
             try
             {
-
+                client.Headers.Add(HttpRequestHeader.Cookie, cookie);
                 String responseString = client.DownloadString(new Uri(Settings.Default.Url + location));
                 return responseString;
             }
-            catch (WebException)
+            catch (Exception e)
             {
+                if (e.Message == "The remote server returned an error: (401) Unauthorized.")
+                {
+                    LoggedIn = false;
+                    Settings.Default.Cookie = "";
+                    System.Windows.Forms.MessageBox.Show("Login Required");
+                }
                 return "error";
             }
 
@@ -33,20 +42,49 @@ namespace AUFMPlugin
         {
             try
             {
+                client.Headers.Add(HttpRequestHeader.Cookie, cookie);
                 client.Headers.Add("Content-type", "application/json");
                 var response = client.UploadString(new Uri(Settings.Default.Url + location), json);
                 client.Headers.Clear();
                 return response;
             }
-            catch (WebException e)
+            catch (Exception e)
             {
+                if (e.Message == "The remote server returned an error: (401) Unauthorized.")
+                {
+                    LoggedIn = false;
+                    Settings.Default.Cookie = "";
+                    System.Windows.Forms.MessageBox.Show("Login Required");
+                }
                 return e.Message;
             }
         }
 
-        public static void login(string User, string Pass)
+        public static String login(String User, String Pass)
         {
-            
+            try
+            {
+                client.Headers.Add("Content-type", "application/json");
+                User u = new User();
+                u.email = User;
+                u.password = Pass;
+                var url = Settings.Default.Url + "/api/login";
+                var response = client.UploadString(new Uri(url), JsonConvert.SerializeObject(u).ToString());
+                cookie = client.ResponseHeaders["Set-Cookie"].ToString();
+                Settings.Default.Cookie = cookie;
+                Settings.Default.Save();
+                LoggedIn = true;
+                return "Login Successful";
+            } catch (Exception)
+            {
+                Settings.Default.Cookie = "";
+                cookie = "";
+                Settings.Default.Save();
+                client.Headers.Clear();
+                LoggedIn = false;
+                return "Login Failed";
+
+            }
         }
 
         public static String putHttpRequest(string location, string data)
@@ -56,8 +94,14 @@ namespace AUFMPlugin
                 var response = client.UploadString(Settings.Default.Url + location, "PUT", data);
                 return response;
             }
-            catch (WebException e)
+            catch (Exception e)
             {
+                if (e.Message == "The remote server returned an error: (401) Unauthorized.")
+                {
+                    LoggedIn = false;
+                    Settings.Default.Cookie = "";
+                    System.Windows.Forms.MessageBox.Show("Login Required");
+                }
                 return e.Message;
             }
         }
@@ -93,5 +137,11 @@ namespace AUFMPlugin
         public int building_id { get; set; }
         public int element_id { get; set; }
         public String part_name { get; set; }
+    }
+
+    public class User
+    {
+        public string email { get; set; }
+        public string password { get; set; }
     }
 }

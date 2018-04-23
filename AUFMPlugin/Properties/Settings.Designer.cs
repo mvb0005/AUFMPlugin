@@ -58,5 +58,17 @@ namespace AUFMPlugin.Properties {
                 this["Username"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string Cookie {
+            get {
+                return ((string)(this["Cookie"]));
+            }
+            set {
+                this["Cookie"] = value;
+            }
+        }
     }
 }

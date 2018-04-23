@@ -19,17 +19,29 @@ namespace AUFMPlugin
 {
     public partial class ControlPane : UserControl
     {
+        private String PID;
+        
         public ControlPane()
         {
             Autodesk.Navisworks.Api.Application.ActiveDocument.CurrentSelection.Changed += new EventHandler<EventArgs>(Selection_Changed);
             InitializeComponent();
             linkLabel1.LinkClicked += new LinkLabelLinkClickedEventHandler(linkClicked);
-            updateBuilding(Settings.Default.Building);
+            if (Settings.Default.Cookie != "")
+            {
+                updateBuilding(Settings.Default.Building);
+            } else
+            {
+                updateBuilding("Login Required");
+            }
         }
 
         private void linkClicked(object sender, EventArgs e)
         {
-            Process.Start("http://aufm-backend.herokuapp.com/");
+            var json = Library.getHttpRequest("/api/building/" + Settings.Default.Building);
+            if (json != "error") {
+                Building b = JsonConvert.DeserializeObject<Building>(json);
+                Process.Start(Settings.Default.Url + "/#parts/" + b.building_id);
+            }
         }
 
         public void updateBuilding(String buildingName)
@@ -44,18 +56,22 @@ namespace AUFMPlugin
             {
                 ModelItem selectedItem = doc.CurrentSelection.SelectedItems.ElementAt<ModelItem>(0);
                 String partID = selectedItem.PropertyCategories.FindPropertyByDisplayName("Element ID", "Value").Value.ToDisplayString().ToString();
-                String url = "part/" + partID + "/protocol";
+                String url = "/api/part/" + partID + "/protocol";
                 String response = Library.getHttpRequest(url);
                 response = response == "error" ? null: response ;
                 JObject json = null;
                 try
                 {
                     json = JObject.Parse(response);
-                    this.label1.Text = partID;
+                    response = Library.getHttpRequest("/api/part/" + partID);
+                    this.label1.Text = JsonConvert.DeserializeObject<Part>(response).part_name + " (" + partID + ")";
+                    this.GotoWebsite.Visible = true;
+                    PID = partID;
                 }
                 catch (ArgumentNullException)
                 {
                     this.label1.Text = "Not In Database";
+                    this.GotoWebsite.Visible = false;
                     this.dataGridView1.Visible = false;   
                 }
                 if (json != null)
@@ -64,14 +80,14 @@ namespace AUFMPlugin
                     this.dataGridView1.Rows.Clear();
                     foreach (Protocol protocol in part.protocols)
                     {
-                        this.dataGridView1.Rows.Add(protocol.protocol_id, protocol.value);
+                        this.dataGridView1.Rows.Add(this.dataGridView1.Rows.Count + 1, protocol.value);
                     }
                     if (this.dataGridView1.Rows.Count > 0)
                     { 
                         this.dataGridView1.Visible = true;
                     } else
                     {
-                        this.label1.Text = "No Protocols Attached";
+                        this.label1.Text += "\r\nNo Protocols Attached";
                         this.dataGridView1.Visible = false;
                     }
                 }
@@ -80,6 +96,7 @@ namespace AUFMPlugin
             {
                 this.label1.Text = "Make A Selection";
                 this.dataGridView1.Visible = false;
+                this.GotoWebsite.Visible = false;
             }
         }
 
@@ -98,5 +115,14 @@ namespace AUFMPlugin
             Dock = DockStyle.Fill;
         }
 
+        private void GotoWebsite_Click(object sender, EventArgs e)
+        {
+            Process.Start(Settings.Default.Url + "/#protocols/" + PID);
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
 }
