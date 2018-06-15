@@ -21,7 +21,12 @@ namespace AUFMPlugin
             userbox.Text = Settings.Default.Username;
             url.Text = Settings.Default.Url;
             PluginRecord pluginRecord = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("AUFMPlugin.AUFM");
-            dockPanePlugin = (AUFMDockPane) pluginRecord.LoadedPlugin;
+            dockPanePlugin = (AUFMDockPane)pluginRecord.LoadPlugin();
+            if (dockPanePlugin == null)
+            {
+                dockPanePlugin = new AUFMDockPane();
+                dockPanePlugin.ActivatePane();
+            }
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -38,7 +43,11 @@ namespace AUFMPlugin
             Settings.Default.Save();
             if (Library.LoggedIn)
             {
-                dockPanePlugin.updateBuilding(Settings.Default.Building);
+                if (dockPanePlugin != null)
+                {
+                    dockPanePlugin.updateBuilding(Settings.Default.Building);
+                }
+                Visible = false; 
             } else
             {
                 dockPanePlugin.updateBuilding("Login Required");

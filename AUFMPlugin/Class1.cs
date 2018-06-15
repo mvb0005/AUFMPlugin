@@ -24,7 +24,10 @@ namespace AUFMPlugin
 
         public void updateBuilding(String buildingName)
         {
-            AUFMControlPane.updateBuilding(buildingName);
+            if (AUFMControlPane != null)
+            {
+                AUFMControlPane.updateBuilding(buildingName);
+            }
         }
 
         public override void DestroyControlPane(Control pane)
@@ -34,7 +37,7 @@ namespace AUFMPlugin
         
         public void toggleVisibilty()
         {
-            Visible = !Visible;
+            Visible = !Visible;  
         }
     }
 
@@ -45,12 +48,13 @@ namespace AUFMPlugin
         public override int Execute(params string[] parameters)
         {
             PluginRecord pluginRecord = Autodesk.Navisworks.Api.Application.Plugins.FindPlugin("AUFMPlugin.AUFM");
-            AUFMDockPane dockPanePlugin = (AUFMDockPane)pluginRecord.LoadedPlugin;
+            AUFMDockPane dockPanePlugin = (AUFMDockPane) pluginRecord.LoadPlugin(); ;
             if (dockPanePlugin != null)
             {
                 dockPanePlugin.toggleVisibilty();
             } else
             {
+                
                 dockPanePlugin = new AUFMDockPane();
             }
      
